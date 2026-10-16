@@ -5,10 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
-  <meta name="description" content="Essentials — the ultimate A–Z toolkit. 39 beautifully crafted utilities in one app." />
+  <meta name="description" content="Essentials — the ultimate A–Z toolkit. 64 beautifully crafted utilities in one app." />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Essentials" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="48x48" href="assets/favicon-48.png" />
   <title>Essentials — Ultimate All Tools</title>
   <link rel="stylesheet" href="css/style.css" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%235E5CE6'/><stop offset='1' stop-color='%230A84FF'/></linearGradient></defs><rect width='100' height='100' rx='24' fill='url(%23g)'/><text x='50' y='68' font-size='52' font-family='-apple-system,system-ui' font-weight='700' fill='white' text-anchor='middle'>E</text></svg>" />
 </head>
 <body>
   <div class="bg-decor" aria-hidden="true">
@@ -35,9 +41,32 @@
         </button>
       </div>
 
+      <!-- iOS-style widget row -->
+      <div class="widget-row">
+        <div class="widget widget-clock">
+          <div class="widget-greet" id="widget-greet">Hello</div>
+          <div class="widget-time" id="widget-time">--:--</div>
+          <div class="widget-date" id="widget-date"></div>
+        </div>
+        <div class="widget widget-stat">
+          <div class="widget-stat-icon" style="background:linear-gradient(135deg,#5e5ce6,#0a84ff)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          </div>
+          <div class="widget-stat-value" id="widget-tool-count">0</div>
+          <div class="widget-stat-label">tools included</div>
+        </div>
+        <div class="widget widget-stat">
+          <div class="widget-stat-icon" style="background:linear-gradient(135deg,#ffd60a,#ff9f0a)">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6.2 6.6.8-4.9 4.6 1.3 6.7L12 17.4l-5.9 3.4 1.3-6.7-4.9-4.6 6.6-.8z"/></svg>
+          </div>
+          <div class="widget-stat-value" id="widget-fav-count">0</div>
+          <div class="widget-stat-label">favourites</div>
+        </div>
+      </div>
+
       <div class="search-wrap">
         <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
-        <input type="search" id="search" class="search-input" placeholder="Search 39 tools…" autocomplete="off" spellcheck="false" />
+        <input type="search" id="search" class="search-input" placeholder="Search tools…" autocomplete="off" spellcheck="false" />
         <kbd class="search-kbd">/</kbd>
       </div>
 
@@ -47,7 +76,7 @@
     <main class="content" id="content"></main>
 
     <footer class="app-footer">
-      <p>Designed with care · Runs entirely on-device · Works offline</p>
+      <p>Designed with care · Runs entirely on-device · Works offline · Installable as an app</p>
     </footer>
   </div>
 

@@ -1,0 +1,23 @@
+{
+  "name": "Essentials — Ultimate All Tools",
+  "short_name": "Essentials",
+  "description": "64 beautifully crafted A–Z utilities in one app. Runs on-device, works offline.",
+  "id": "/Essentials/",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f2f2f7",
+  "theme_color": "#5e5ce6",
+  "categories": ["utilities", "productivity", "tools"],
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Calculator", "url": "./index.html" },
+    { "name": "Password Generator", "url": "./index.html" },
+    { "name": "Stopwatch", "url": "./index.html" }
+  ]
+}

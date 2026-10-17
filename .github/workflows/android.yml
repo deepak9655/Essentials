@@ -40,15 +40,34 @@ jobs:
           set -o pipefail
           ./gradlew assembleDebug --no-daemon 2>&1 | tee gradle-build.log
 
-      - name: Report build errors
+      - name: Report errors (Kotlin/AAPT)
         if: failure()
         working-directory: android
         run: |
           if [ -f gradle-build.log ]; then
-            grep -E "^e: |error:|FAILURE:|What went wrong|Execution failed|Duplicate|> " gradle-build.log | head -20 | while IFS= read -r line; do
-              echo "::error::${line:0:240}"
+            grep -aE "e: |error: |error:" gradle-build.log | head -10 | while IFS= read -r line; do
+              echo "::error::${line:0:230}"
             done
-            echo "::error::TAIL: $(tail -3 gradle-build.log | tr '\n' ' | ' | cut -c1-240)"
+          fi
+
+      - name: Report errors (failure context)
+        if: failure()
+        working-directory: android
+        run: |
+          if [ -f gradle-build.log ]; then
+            grep -aE "FAILED|What went wrong|Caused by|Execution failed|A problem occurred|Could not|cannot find|Unresolved" gradle-build.log | head -10 | while IFS= read -r line; do
+              echo "::error::CTX: ${line:0:225}"
+            done
+          fi
+
+      - name: Report errors (log tail)
+        if: failure()
+        working-directory: android
+        run: |
+          if [ -f gradle-build.log ]; then
+            tail -20 gradle-build.log | grep -av '^\s*$' | tail -8 | while IFS= read -r line; do
+              echo "::error::TAIL: ${line:0:225}"
+            done
           fi
 
       - name: Upload build log on failure

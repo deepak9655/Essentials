@@ -13,19 +13,13 @@ permissions:
 
 jobs:
   build-apk:
-    name: Build debug APK
+    name: Build native APK
     runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
 
       - name: Set up JDK 17
         uses: actions/setup-java@v5
@@ -39,12 +33,6 @@ jobs:
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-34" "build-tools;34.0.0" > /dev/null
           echo "sdk.dir=$ANDROID_HOME" > android/local.properties
 
-      - name: Install dependencies & sync web assets
-        run: |
-          npm ci
-          npm run build
-          npx cap sync android
-
       - name: Build APK
         working-directory: android
         run: |
@@ -52,14 +40,15 @@ jobs:
           set -o pipefail
           ./gradlew assembleDebug --no-daemon 2>&1 | tee gradle-build.log
 
-      - name: Report Gradle errors
+      - name: Report build errors
         if: failure()
         working-directory: android
         run: |
           if [ -f gradle-build.log ]; then
-            grep -E "error:|FAILURE:|What went wrong|Execution failed|Duplicate|> " gradle-build.log | head -15 | while IFS= read -r line; do
+            grep -E "^e: |error:|FAILURE:|What went wrong|Execution failed|Duplicate|> " gradle-build.log | head -20 | while IFS= read -r line; do
               echo "::error::${line:0:240}"
             done
+            echo "::error::TAIL: $(tail -3 gradle-build.log | tr '\n' ' | ' | cut -c1-240)"
           fi
 
       - name: Upload build log on failure
@@ -87,7 +76,7 @@ jobs:
           cp android/app/build/outputs/apk/debug/app-debug.apk "essentials-${GITHUB_REF_NAME}.apk"
           gh release create "$GITHUB_REF_NAME" "essentials-${GITHUB_REF_NAME}.apk" \
             --title "Essentials $GITHUB_REF_NAME" \
-            --notes "Automated Android build of Essentials — 64-tool ultimate all-tools app." \
+            --notes "Native Android build of Essentials — Material You + AMOLED, 43 tools." \
             --repo "$GITHUB_REPOSITORY" \
           || gh release upload "$GITHUB_REF_NAME" "essentials-${GITHUB_REF_NAME}.apk" --clobber --repo "$GITHUB_REPOSITORY"
 
@@ -103,7 +92,7 @@ jobs:
           git rm -r --cached . -q
           find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
           cp "$RUNNER_TEMP/$NAME" .
-          echo "Essentials Android build $GITHUB_REF_NAME" > README.md
+          echo "Essentials native Android build $GITHUB_REF_NAME" > README.md
           git add -A
           git commit -m "Android build $GITHUB_REF_NAME"
           git push -f origin dist

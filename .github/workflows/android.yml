@@ -1,0 +1,127 @@
+name: Android APK
+
+on:
+  push:
+    branches: [main, 'arena/**']
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    name: Build native APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Ensure Android SDK packages
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-34" "build-tools;34.0.0" > /dev/null
+          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+
+      - name: Build APK
+        working-directory: android
+        run: |
+          chmod +x ./gradlew
+          set -o pipefail
+          ./gradlew assembleDebug --no-daemon 2>&1 | tee gradle-build.log
+
+      - name: Report errors (Kotlin/AAPT, head)
+        if: failure()
+        working-directory: android
+        run: |
+          if [ -f gradle-build.log ]; then
+            grep -aE "e: |error: " gradle-build.log | head -9 | while IFS= read -r line; do
+              echo "::error::${line:0:230}"
+            done
+          fi
+
+      - name: Report errors (Kotlin/AAPT, tail)
+        if: failure()
+        working-directory: android
+        run: |
+          if [ -f gradle-build.log ]; then
+            grep -aE "e: |error: " gradle-build.log | tail -n +10 | head -9 | while IFS= read -r line; do
+              echo "::error::MORE: ${line:0:225}"
+            done
+          fi
+
+      - name: Report errors (failure context)
+        if: failure()
+        working-directory: android
+        run: |
+          if [ -f gradle-build.log ]; then
+            grep -aE "FAILED|What went wrong|Caused by|Execution failed|A problem occurred|Could not|cannot find|Unresolved" gradle-build.log | head -10 | while IFS= read -r line; do
+              echo "::error::CTX: ${line:0:225}"
+            done
+          fi
+
+      - name: Report errors (log tail)
+        if: failure()
+        working-directory: android
+        run: |
+          if [ -f gradle-build.log ]; then
+            tail -20 gradle-build.log | grep -av '^\s*$' | tail -8 | while IFS= read -r line; do
+              echo "::error::TAIL: ${line:0:225}"
+            done
+          fi
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-build-log
+          path: |
+            android/gradle-build.log
+            android/app/build/reports/**
+          if-no-files-found: ignore
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: essentials-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+      - name: Attach APK to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk "essentials-${GITHUB_REF_NAME}.apk"
+          gh release create "$GITHUB_REF_NAME" "essentials-${GITHUB_REF_NAME}.apk" \
+            --title "Essentials $GITHUB_REF_NAME" \
+            --notes "Native Android build of Essentials — Material You + AMOLED, 43 tools." \
+            --repo "$GITHUB_REPOSITORY" \
+          || gh release upload "$GITHUB_REF_NAME" "essentials-${GITHUB_REF_NAME}.apk" --clobber --repo "$GITHUB_REPOSITORY"
+
+      - name: Publish APK to dist branch
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          set -e
+          NAME="essentials-${GITHUB_REF_NAME}.apk"
+          cp "android/app/build/outputs/apk/debug/app-debug.apk" "$RUNNER_TEMP/$NAME"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan dist
+          git rm -r --cached . -q
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp "$RUNNER_TEMP/$NAME" .
+          echo "Essentials native Android build $GITHUB_REF_NAME" > README.md
+          git add -A
+          git commit -m "Android build $GITHUB_REF_NAME"
+          git push -f origin dist

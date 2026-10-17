@@ -90,3 +90,20 @@ jobs:
             --notes "Automated Android build of Essentials — 64-tool ultimate all-tools app." \
             --repo "$GITHUB_REPOSITORY" \
           || gh release upload "$GITHUB_REF_NAME" "essentials-${GITHUB_REF_NAME}.apk" --clobber --repo "$GITHUB_REPOSITORY"
+
+      - name: Publish APK to dist branch
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          set -e
+          NAME="essentials-${GITHUB_REF_NAME}.apk"
+          cp "android/app/build/outputs/apk/debug/app-debug.apk" "$RUNNER_TEMP/$NAME"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan dist
+          git rm -r --cached . -q
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp "$RUNNER_TEMP/$NAME" .
+          echo "Essentials Android build $GITHUB_REF_NAME" > README.md
+          git add -A
+          git commit -m "Android build $GITHUB_REF_NAME"
+          git push -f origin dist

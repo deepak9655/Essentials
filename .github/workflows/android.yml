@@ -49,7 +49,28 @@ jobs:
         working-directory: android
         run: |
           chmod +x ./gradlew
-          ./gradlew assembleDebug --no-daemon
+          set -o pipefail
+          ./gradlew assembleDebug --no-daemon 2>&1 | tee gradle-build.log
+
+      - name: Report Gradle errors
+        if: failure()
+        working-directory: android
+        run: |
+          if [ -f gradle-build.log ]; then
+            grep -E "error:|FAILURE:|What went wrong|Execution failed|Duplicate|> " gradle-build.log | head -15 | while IFS= read -r line; do
+              echo "::error::${line:0:240}"
+            done
+          fi
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-build-log
+          path: |
+            android/gradle-build.log
+            android/app/build/reports/**
+          if-no-files-found: ignore
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4

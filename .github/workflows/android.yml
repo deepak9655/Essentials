@@ -40,13 +40,23 @@ jobs:
           set -o pipefail
           ./gradlew assembleDebug --no-daemon 2>&1 | tee gradle-build.log
 
-      - name: Report errors (Kotlin/AAPT)
+      - name: Report errors (Kotlin/AAPT, head)
         if: failure()
         working-directory: android
         run: |
           if [ -f gradle-build.log ]; then
-            grep -aE "e: |error: |error:" gradle-build.log | head -10 | while IFS= read -r line; do
+            grep -aE "e: |error: " gradle-build.log | head -9 | while IFS= read -r line; do
               echo "::error::${line:0:230}"
+            done
+          fi
+
+      - name: Report errors (Kotlin/AAPT, tail)
+        if: failure()
+        working-directory: android
+        run: |
+          if [ -f gradle-build.log ]; then
+            grep -aE "e: |error: " gradle-build.log | tail -n +10 | head -9 | while IFS= read -r line; do
+              echo "::error::MORE: ${line:0:225}"
             done
           fi
 

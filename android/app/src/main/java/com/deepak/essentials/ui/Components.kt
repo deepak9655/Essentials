@@ -153,7 +153,7 @@ fun Hint(text: String) {
 }
 
 @Composable
-fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun PrimaryButton(text: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Button(onClick = onClick, modifier = modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
         Text(text, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
     }

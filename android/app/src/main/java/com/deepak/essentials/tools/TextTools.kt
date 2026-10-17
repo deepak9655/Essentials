@@ -63,7 +63,7 @@ fun WordCounterTool(onBack: () -> Unit) {
     }
 }
 
-private fun Double.roundToIntSafe(): Int = kotlin.math.roundToInt(this)
+private fun Double.roundToIntSafe(): Int = Math.round(this).toInt()
 
 /* ============================== Case Converter ============================== */
 
